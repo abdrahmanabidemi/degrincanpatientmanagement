@@ -43,15 +43,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        supabase.from("user_roles").select("role").eq("user_id", session.user.id)
-          .then(({ data }) => applyRoles(data));
-      }
-      setLoading(false);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          supabase.from("user_roles").select("role").eq("user_id", session.user.id)
+            .then(({ data }) => applyRoles(data))
+            .catch(() => {});
+        }
+      })
+      .catch((err) => {
+        console.error("Auth session error:", err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
 
     return () => subscription.unsubscribe();
   }, []);
