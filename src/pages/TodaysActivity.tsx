@@ -57,11 +57,14 @@ export default function TodaysActivity() {
 
     if (logData) setLogs(logData as any[]);
 
-    // Fetch staff names
-    const { data: sData } = await supabase.rpc("get_user_names");
+    // Fetch staff names and roles
+    const { data: sData } = await supabase.rpc("list_staff");
     if (sData) {
       const map = new Map<string, string>();
-      (sData as any[]).forEach(s => map.set(s.user_id, s.full_name || s.email));
+      (sData as any[]).forEach(s => {
+        const displayName = s.role === "admin" ? "Admin" : (s.full_name || s.email || "Staff");
+        map.set(s.user_id, displayName);
+      });
       setStaffMap(map);
     }
     
@@ -184,7 +187,7 @@ export default function TodaysActivity() {
               <div className="p-12 text-center text-muted-foreground">No activity recorded today yet.</div>
             ) : (
               logs.map(log => {
-                const staffName = staffMap.get(log.changed_by) || "Unknown User";
+                const staffName = log.changed_by ? (staffMap.get(log.changed_by) || "Admin") : "Admin";
                 const time = new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 const patientName = log.patients?.name || "Deleted Patient";
                 const patientNum = log.patients?.patient_number || "";

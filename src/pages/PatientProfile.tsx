@@ -146,9 +146,10 @@ export default function PatientProfile() {
   );
 
   const getStaffName = (userId: string | null) => {
-    if (!userId) return "Unassigned";
+    if (!userId) return "Admin";
     const s = staff.find(x => x.user_id === userId);
-    return s?.display_name || s?.email || "Unknown Staff";
+    if (!s || s.role === "admin" || s.role === "clinic") return "Admin";
+    return s.full_name || s.display_name || s.email || "Staff";
   };
 
   return (
